@@ -17,23 +17,25 @@ export class HeaderComponent implements OnInit {
   constructor(
     private readonly authService: AuthService,
     private readonly themeService: ThemeService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.profileMenu = [
       {
-        label: 'Change Theme',
-        icon: 'pi pi-fw pi-plus',
+        label: 'Dark mode',
+        icon: 'pi pi-fw pi-moon',
         command: () => {
           this.change();
         },
+        style: { cursor: 'pointer' }
       },
       {
-        icon: 'pi pi-fw pi-trash',
+        icon: 'pi pi-fw pi-power-off',
         label: 'Logout',
         command: () => {
           this.logout();
         },
+        style: { cursor: 'pointer' }
       },
     ];
   }
@@ -44,12 +46,16 @@ export class HeaderComponent implements OnInit {
 
   change() {
     let theme = '';
-    if (this.theme === 'dark') {
+    if (this.theme === 'light') {
       theme = 'bootstrap4-light-blue';
-      this.theme = 'light';
+      this.theme = 'dark';
+      this.profileMenu[0].icon = 'pi pi-fw pi-moon';
+      this.profileMenu[0].label = 'Dark mode';
     } else {
       theme = 'bootstrap4-dark-blue';
-      this.theme = 'dark';
+      this.theme = 'light';
+      this.profileMenu[0].icon = 'pi pi-fw pi-sun';
+      this.profileMenu[0].label = 'Light mode';
     }
     this.themeService.switchTheme(theme);
   }
