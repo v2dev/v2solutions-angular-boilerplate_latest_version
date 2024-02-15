@@ -26,7 +26,7 @@ pipeline {
             }
         }
 
-        SonarQube Scan Stage
+        //SonarQube Scan Stage
         stage('SonarQube Scan') {
             steps {
                 script {
