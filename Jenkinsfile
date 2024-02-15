@@ -68,7 +68,7 @@ pipeline {
             }
         }
 
-        Quality Gate Stage
+        // Quality Gate Stage
         stage('Quality Gate') {
             steps {
                 script {
