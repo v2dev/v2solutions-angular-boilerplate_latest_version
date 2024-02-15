@@ -75,11 +75,12 @@ pipeline {
                     withSonarQubeEnv(SONARQUBE_SERVER) {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "Quality Gate failed: ${qg.status}"
-                        }
-                        else {
+                            currentBuild.result = 'FAILURE'
+                            echo "Quality Gate failed: ${qg.status}"
+                        } else {
                             echo "Quality Gate Success"
                         }
+                        env.QUALITY_GATE_STATUS = qg.status
                     }
                 }
             }
