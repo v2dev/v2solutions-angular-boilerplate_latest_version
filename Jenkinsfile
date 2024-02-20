@@ -217,6 +217,7 @@ pipeline {
                         bat 'aws s3 cp dist/base-project s3://v2-angularjs-boilerplate --recursive'
                     } else {
                         echo "Skipping copy operation as the bucket does not exist."
+                        echo "Provide 'create' value for INFRA_ACTION parameter while running the pipeline."
                     }
                 }
             }
