@@ -26,26 +26,26 @@ pipeline {
             }
         }
 
-        //SonarQube Scan Stage
-        stage('SonarQube Scan') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarQubeScanner'
-                    def projectKey = "SaaS-Boilerplate-Angular"
-                    withSonarQubeEnv(SONARQUBE_SERVER) {
-                        echo "Current working directory: ${pwd()}"
-                        bat "./sonarqube_script.bat ${scannerHome} ${projectKey}"
+        // //SonarQube Scan Stage
+        // stage('SonarQube Scan') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool 'SonarQubeScanner'
+        //             def projectKey = "SaaS-Boilerplate-Angular"
+        //             withSonarQubeEnv(SONARQUBE_SERVER) {
+        //                 echo "Current working directory: ${pwd()}"
+        //                 bat "./sonarqube_script.bat ${scannerHome} ${projectKey}"
 
-                        // Manually construct the SonarQube Analysis URL
-                        def sonarqubeUrl = "${SONARQUBE_SERVER}/dashboard?id=${projectKey}"
-                        echo "SonarQube Analysis URL: ${sonarqubeUrl}"
+        //                 // Manually construct the SonarQube Analysis URL
+        //                 def sonarqubeUrl = "${SONARQUBE_SERVER}/dashboard?id=${projectKey}"
+        //                 echo "SonarQube Analysis URL: ${sonarqubeUrl}"
 
-                        // Set the URL as an environment variable to use it in later stages
-                        env.SONARQUBE_URL = sonarqubeUrl
-                    }
-                }
-            }   
-        }
+        //                 // Set the URL as an environment variable to use it in later stages
+        //                 env.SONARQUBE_URL = sonarqubeUrl
+        //             }
+        //         }
+        //     }   
+        // }
 
         // // Email Notification Stage
         // stage('Email Notification') {
@@ -68,23 +68,23 @@ pipeline {
         //     }
         // }
 
-        // Quality Gate Stage
-        stage('Quality Gate') {
-            steps {
-                script {
-                    withSonarQubeEnv(SONARQUBE_SERVER) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            currentBuild.result = 'FAILURE'
-                            echo "Quality Gate failed: ${qg.status}"
-                        } else {
-                            echo "Quality Gate Success"
-                        }
-                        env.QUALITY_GATE_STATUS = qg.status
-                    }
-                }
-            }
-        }
+        // // Quality Gate Stage
+        // stage('Quality Gate') {
+        //     steps {
+        //         script {
+        //             withSonarQubeEnv(SONARQUBE_SERVER) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     currentBuild.result = 'FAILURE'
+        //                     echo "Quality Gate failed: ${qg.status}"
+        //                 } else {
+        //                     echo "Quality Gate Success"
+        //                 }
+        //                 env.QUALITY_GATE_STATUS = qg.status
+        //             }
+        //         }
+        //     }
+        // }
 
         // Configure Infrastructure
         stage("Config Infra") {
@@ -100,7 +100,7 @@ pipeline {
         // Delete s3 bucket objects so as to delete the s3 bucket
         stage('Delete S3 Objects') {
             when {
-                expression { params.DESTROY_INFRA?.toLowerCase() == 'yes' }
+                expression { params.INFRA_ACTION?.toLowerCase() == 'destroy' }
             }
             steps {
                 script {
@@ -115,15 +115,15 @@ pipeline {
             }
         }
         
-        // Conditional stage based on DESTROY_INFRA parameter
+        // Conditional stage based on INFRA_ACTION parameter
         stage("Conditional Stage") {
             steps {
                 script {
-                    // Check if DESTROY_INFRA parameter is set to "YES", "Yes", "y", or "yes"
-                    def destroyInfraFlag = params.DESTROY_INFRA?.toLowerCase()
-                    echo "DESTROY_INFRA flag value: ${destroyInfraFlag}"
+                    // Check if INFRA_ACTION parameter is set to "create", "delete", "no action", "na"
+                    def infraActionFlag = params.INFRA_ACTION?.toLowerCase()
+                    echo "INFRA_ACTION flag value: ${infraActionFlag}"
                     
-                    if (destroyInfraFlag in ['yes', 'y']) {
+                    if (infraActionFlag in ['destroy', 'delete']) {
                         // Destroy Infrastructure stage
                         bat 'echo "Running Destroy infra stage"'
                         bat '@echo off'
@@ -132,7 +132,7 @@ pipeline {
                             bat './terraformDestroy.bat %AWS_ACCESS_KEY_ID% %AWS_SECRET_ACCESS_KEY% %AWS_DEFAULT_REGION% %WORKSPACE%'
                             infraCreated = false
                         }
-                    } else if (destroyInfraFlag in ['no', 'n']) {
+                    } else if (infraActionFlag in ['create']) {
                         // Create Infrastructure stage
                         bat 'echo "Running Create infra stage"'
                         bat '@echo off'
@@ -141,8 +141,10 @@ pipeline {
                             bat './terragruntInvocation.bat %AWS_ACCESS_KEY_ID% %AWS_SECRET_ACCESS_KEY% %AWS_DEFAULT_REGION% %WORKSPACE%'
                             infraCreated = true
                         }
+                    } else if (infraActionFlag in ['na', 'no action']) {
+                        echo "No Action Required"
                     } else {
-                        error "Invalid value for DESTROY_INFRA parameter. Expected 'yes' or 'no'."
+                        error "Invalid value for INFRA_ACTION parameter. Expected 'create', 'delete', 'no action', 'na'."
                     }
                 }
             }
@@ -180,16 +182,45 @@ pipeline {
         }
 
         // Copy built React code to S3 bucket
+        // stage("Copy Artifacts to S3") {
+        //     when {
+        //         expression { params.INFRA_ACTION?.toLowerCase() == 'no' }
+        //     }
+        //     steps {
+        //         bat '@echo off'
+        //         bat 'echo %WORKSPACE%'
+        //         bat 'echo ${infraCreated}'
+        //         bat 'aws s3 cp dist/base-project s3://v2-angularjs-boilerplate --recursive'
+        //     }
+        // }
+
+        // Copy built React code to S3 bucket
         stage("Copy Artifacts to S3") {
-            when {
-                expression { params.DESTROY_INFRA?.toLowerCase() == 'no' }
-            }
             steps {
-                bat '@echo off'
-                bat 'echo %WORKSPACE%'
-                bat 'echo ${infraCreated}'
-                bat 'aws s3 cp dist/base-project s3://v2-angularjs-boilerplate --recursive'
+                script {
+                    def bucketName = "v2-angularjs-boilerplate"
+                    def bucketExists = false
+                    
+                    // Check if the bucket exists
+                    def checkBucketCommand = "aws s3api head-bucket --bucket ${bucketName} 2>&1"
+                    def checkBucketResult = bat(script: checkBucketCommand, returnStatus: true)
+                    
+                    if (checkBucketResult == 0) {
+                        bucketExists = true
+                        echo "Bucket ${bucketName} exists."
+                    } else {
+                        echo "Bucket ${bucketName} does not exist."
+                    }
+                    
+                    // Perform the copy operation if the bucket exists
+                    if (bucketExists) {
+                        bat 'aws s3 cp dist/base-project s3://v2-angularjs-boilerplate --recursive'
+                    } else {
+                        echo "Skipping copy operation as the bucket does not exist."
+                    }
+                }
             }
         }
+
     }
 }
