@@ -104,19 +104,38 @@ pipeline {
             }
             steps {
                 script {
-                    bat 'echo "RunningS3DeleteObject"'
-                    bat '@echo off'
-                    script {
-                        dir("scripts") {
-                            bat "delete-objects.bat"
+                    def bucketName = "v2-angularjs-boilerplate"
+                    def bucketExists = false
+                    
+                    // Check if the bucket exists
+                    def checkBucketCommand = "aws s3api head-bucket --bucket ${bucketName} 2>&1"
+                    def checkBucketResult = bat(script: checkBucketCommand, returnStatus: true)
+                    
+                    if (checkBucketResult == 0) {
+                        bucketExists = true
+                        echo "Bucket ${bucketName} exists."
+                    } else {
+                        echo "Bucket ${bucketName} does not exist."
+                    }
+
+                    // Perform delete operation only if the bucket exists
+                    if (bucketExists) {
+                        bat 'echo "RunningS3DeleteObject"'
+                        bat '@echo off'
+                        script {
+                            dir("scripts") {
+                                bat "delete-objects.bat"
+                            }
                         }
+                    } else {
+                        echo "Skipping delete operation as the bucket does not exist."
                     }
                 }
             }
         }
         
         // Conditional stage based on INFRA_ACTION parameter
-        stage("Conditional Stage") {
+        stage("Infrastructure Deployment") {
             steps {
                 script {
                     // Check if INFRA_ACTION parameter is set to "create", "delete", "no action", "na"
@@ -132,7 +151,7 @@ pipeline {
                             bat './terraformDestroy.bat %AWS_ACCESS_KEY_ID% %AWS_SECRET_ACCESS_KEY% %AWS_DEFAULT_REGION% %WORKSPACE%'
                             infraCreated = false
                         }
-                    } else if (infraActionFlag in ['create']) {
+                    } else if (infraActionFlag in ['create', 'update']) {
                         // Create Infrastructure stage
                         bat 'echo "Running Create infra stage"'
                         bat '@echo off'
