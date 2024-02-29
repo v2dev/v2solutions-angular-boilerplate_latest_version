@@ -24,8 +24,6 @@ export class RegisterComponent {
   displaySection: string = 'register';
   loading = false;
   imgUrl: string = '';
-  userName = '';
-  password = '';
   otp!: number;
   countryList = [
     { id: 'in', name: 'India' },

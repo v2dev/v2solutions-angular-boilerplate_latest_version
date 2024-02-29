@@ -1,14 +1,8 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { AutoFocusModule } from 'primeng/autofocus';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { InputTextModule } from 'primeng/inputtext';
-import { PasswordModule } from 'primeng/password';
 import { SharedModule } from 'src/app/shared/modules/shared.module';
 import { AuthService } from 'src/app/shared/services/auth.service';
-import { ToasterService } from 'src/app/shared/services/toaster.service';
 import { emailValidator } from 'src/app/shared/validators/email-validator';
 import { matchValue } from 'src/app/shared/validators/match-value-validator';
 import { numericValidator } from 'src/app/shared/validators/numeric-validator';
@@ -28,7 +22,6 @@ export class ResetPasswordComponent {
 
   constructor(
     private authService: AuthService,
-    private toaster: ToasterService,
     private router: Router,
     private formBuilder: FormBuilder) {
     this.createForgotPasswordForm();
@@ -58,7 +51,7 @@ export class ResetPasswordComponent {
 
   createResetPasswordForm() {
     this.resetPasswordForm = this.formBuilder.group({
-      otp: ['', [Validators.required,, numericValidator(), Validators.minLength(6), Validators.maxLength(6)]],
+      otp: ['', [Validators.required, numericValidator(), Validators.minLength(6), Validators.maxLength(6)]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required]
     },

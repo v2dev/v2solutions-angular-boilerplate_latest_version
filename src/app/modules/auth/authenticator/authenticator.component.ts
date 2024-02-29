@@ -19,7 +19,7 @@ import { numericValidator } from 'src/app/shared/validators/numeric-validator';
 })
 export class AuthenticatorComponent {
   authenticatorForm!: FormGroup;
-  loading = false;
+  loading: boolean = false;
   @Input() imgUrl!: string;
   @Input() authInfo!: RequestModel;
 
