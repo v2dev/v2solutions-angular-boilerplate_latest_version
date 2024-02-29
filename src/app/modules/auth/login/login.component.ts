@@ -13,9 +13,9 @@ import { Router } from '@angular/router';
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
-  loading = false;
-  termsAndCondition = false;
-  isChecked = false;
+  loading: boolean = false;
+  termsAndCondition: boolean = false;
+  isChecked: boolean = false;
   displaySection: string = 'login';
 
   constructor(

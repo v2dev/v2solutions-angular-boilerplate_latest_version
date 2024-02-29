@@ -16,9 +16,9 @@ import { MenuService } from './shared/services/menu.service';
 })
 export class AppComponent {
   title = 'base-project';
-  isAuthorized = false;
-  isFooterEnable = AppSettings.isFooterEnable;
-  menuPosition = AppSettings.menuPosition;
+  isAuthorized: boolean = false;
+  isFooterEnable: boolean = AppSettings.isFooterEnable;
+  menuPosition: string = AppSettings.menuPosition;
   headerElement: any;
   isUIBlocked = false;
   constants = AppConstants;

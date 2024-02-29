@@ -1,5 +1,6 @@
 .header {
   justify-content: space-between;
+
   .logo {
     img.grid-icon {
       margin-right: 10px;
@@ -8,6 +9,7 @@
       height: 50px;
       width: auto;
     }
+
     img.grid-icon:hover,
     .navbar-brand:hover {
       -ms-transform: scale(1.1);
@@ -21,9 +23,18 @@
     }
   }
 }
+
 ::ng-deep .header-menu {
   ul {
     padding: 0;
     margin: 0;
+
+    li {
+      .p-menuitem-content {
+        a {
+          text-decoration: none !important;
+        }
+      }
+    }
   }
 }
